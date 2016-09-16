@@ -3,5 +3,5 @@ project(Project1)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES main.c)
+set(SOURCE_FILES main.c ppmrw.c)
 add_executable(Project1 ${SOURCE_FILES})
