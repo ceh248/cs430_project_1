@@ -8,82 +8,94 @@ typedef struct {
     unsigned char r, g, b;
 }RGB_pixal;
 
-RGB_pixal *buffer;
+static void write_P3(char* p6, char*take_along);
+static void write_P6(char* p6, char*take_along);
 
-int width;
-int height;
+static void ppmrw(int format, char* input, char* ouput){
+    // ok are taking in a  format to tranform data in to
+    // input = ppm file
+    // output = tranform ppm file
 
-typedef struct {
-    int x,y;
-    struct PPM_image *data;
-}PPM_image;
+    // read individual bytes
+    FILE* fp = fopen(input,"rb");
 
-
-void ppmrw(const char* ppmin,const char* ppmout, int format){
-    FILE* fp= fopen(ppmin,"rb");
-
+    // seek to the end of the file to get its size
     fseek(fp,0L,SEEK_END);
     rewind(fp);
+    int ch;
+    ch = fgetc(fp);
 
-    char *std = malloc(sizeof(fp));
-    //char buffer[] = malloc(sizeof(fp));
-    int c = fgetc(fp);
+    // malloc the size of the file
+    char *pixmap;
+    pixmap = (char *)malloc(sizeof(fp));
+
+    // check the header
+    // checking each bye
     int i = 0;
-    std[i] = 0;
-    while (c != EOF){
-        if(c == '\n'){
-            c = fgetc(fp);
-        }else if(isspace(c)){
-            c = fgetc(fp);
-        } else if(c == '#'){
+    pixmap[i] = 0;
+    while(ch != EOF){
+        if(ch == '\n'){
+            ch = fgetc(fp);
+        }else if(isspace(ch)){
+            ch = fgetc(fp);
+        } else if(ch == '#'){
             // need to skip a line
-            c = fgetc(fp);
+            while(ch != '\n'){
+                ch = fgetc(fp);
+            }
+            ch = fgetc(fp);
         } else{
-            std[i] = c;
-            c = fgetc(fp);
+            pixmap[i] = ch;
+            ch = fgetc(fp);
             i+=1;
         }
     }
+    if (pixmap[0]!='P'){
+        fprintf(stderr,"Error not PPM file header:\n");
+        exit(1);
+    }
+    if (!(pixmap[1] == '6' || '3' == pixmap[1])){
+        fprintf(stderr,"Error not PPM file header type:\n");
+        exit(1);
+    }
 
     if (format == 3){
-        //char* take_along = std;
-        write_P3(ppmout,std);
+        write_P3(ouput,pixmap);
     }
     if (format == 6){
-        write_P6(ppmout,std);
+        write_P6(ouput,pixmap);
     }
-    return;
 }
 
-// ok write to the file in p6 format right now.
-void write_P3(const char* p3, char* take_along){
+static void write_P3(char* p3, char*take_along){
     FILE* fp = fopen(p3,"wb");
-    //char *std = malloc(sizeof(take_along));
-    //fwrite(take_along,sizeof(take_along),sizeof(take_along),fp);
-
-    //fclose(fp);
-    return;
-}
-// write to the file in p6 format
-void write_P6(const char* p6, char*take_along){
-    FILE* fp = fopen(p6,"wb");
-    //char *std = malloc(sizeof(take_along));
     fwrite(take_along,sizeof(take_along),sizeof(take_along),fp);
+    fclose(fp);
     return;
 }
+
+static void write_P6(char* p6, char*take_along){
+    FILE* fp = fopen(p6,"wb");
+    fwrite(take_along,sizeof(take_along),sizeof(take_along),fp);
+    fclose(fp);
+    return;
+}
+
 
 int main (int argc, char *argv[]){
     if (argc != 4){
         fprintf(stderr,"Error not correct amount of argc: \n");
         exit(1);
     }
-
+/*
     // each of the argv to a value
-    int format = atoi(argv[1]);
-
-    // run ppmrw
     const char *input_file = argv[2];
     const char *output_file = argv[3];
+    // break everything up right now
     ppmrw(input_file,output_file,format);
+    // testing*/
+    int format = atoi(argv[1]);
+    ppmrw(format,argv[2],argv[3]);
 
+    return 0;
 }
